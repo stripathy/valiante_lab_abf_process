@@ -9,12 +9,12 @@ import glob
 # this function tries to guess the gain on the response (voltage) channel
 # the logic is to compare the voltage value at time 0 and compare that to the listed RMP
 # the best gain minimizes that difference
-CHECK_RESPONSE_GAINS = np.array([.25, .33, .5, 1, 2, 20, 25, 50]) # these are the valid gains that Homeira /Lihua uses
-def guess_response_gain(resp_vec, stated_rmp):
+CHECK_RESPONSE_GAINS = np.array([.25, .33, .5, 1, 2, 20, 25, 50, 100]) # these are the valid gains that Homeira /Lihua uses
+def guess_response_gain(resp_vec, stated_rmp, offset_voltage = 0):
     # this function is a bit of logic that tries to guess the gain given an rmp value
     # try to figure out gain on response channel by comparing to RMP
 
-    abs_diff_vec = np.abs(resp_vec[0] * CHECK_RESPONSE_GAINS - cell_rmp)
+    abs_diff_vec = np.abs(resp_vec[0] * CHECK_RESPONSE_GAINS + offset_voltage - stated_rmp)
     best_gain_ind = np.argmin(abs_diff_vec)
     
     rmp_abs_error = abs_diff_vec[best_gain_ind]
@@ -31,19 +31,24 @@ def get_stim_gain(stim_vec):
     return stim_gain
 
 # parse relevant info related to stimulus, including duration, and amplitudes
-def get_stim_info(abf, stim_channel_num = 1, stim_gain = 1):
+def get_stim_info(abf, stim_channel_num = 1, stim_gain = 1, stim_name = 'sweepC'):
     num_sweeps = abf.sweepCount
     stim_amps = np.zeros(num_sweeps) 
     stim_start_time = None
     stim_end_time = None
+    sampling_rate = int(round(1/(abf.sweepX[2] - abf.sweepX[1]))) # manually calculate the sampling rate
+
     for i in range(0, num_sweeps):
         abf.setSweep(i, channel=stim_channel_num)
         sampling_rate = abf.dataRate
-        stim_vec = abf.sweepC * stim_gain
+        if stim_name == 'sweepY':
+            stim_vec = np.round(abf.sweepY * stim_gain)
+        else:
+            stim_vec = np.round(abf.sweepC * stim_gain)
         stim_amp = stim_vec[5000]
 
         stim_amps[i] = round(stim_amp)
-        non_zero_inds = np.where(stim_vec != 0)
+        non_zero_inds = np.where(stim_vec == stim_amp)
         stim_duration = np.shape(non_zero_inds)[1] * 1/sampling_rate
         if stim_duration == 0:
             continue
@@ -52,7 +57,6 @@ def get_stim_info(abf, stim_channel_num = 1, stim_gain = 1):
         
         stim_start_time = abf.sweepX[stim_start_ind]
         stim_end_time = abf.sweepX[stim_end_ind]
-    sampling_rate = int(round(1/(abf.sweepX[2] - abf.sweepX[1]))) # manually calculate the sampling rate
 
     ret_dict = {'stim_amp_vec' : stim_amps, 'stim_duration' : stim_duration, 
                 'stim_start_time' : stim_start_time, 'stim_end_time' : stim_end_time, 'num_sweeps' : num_sweeps,
@@ -60,7 +64,7 @@ def get_stim_info(abf, stim_channel_num = 1, stim_gain = 1):
     return(ret_dict)
 
 # gets all relevant info about stimulus, including channel, duration, etc. and returns as dictionary
-def get_stim_dict(meta_row, cell_meta_df):
+def get_stim_dict(meta_row, cell_meta_df, stim_name = 'sweepC'):
     # returns path of abf file containing stim info
     # stim channel index
     # stim gain
