@@ -9,7 +9,7 @@ import glob
 # this function tries to guess the gain on the response (voltage) channel
 # the logic is to compare the voltage value at time 0 and compare that to the listed RMP
 # the best gain minimizes that difference
-CHECK_RESPONSE_GAINS = np.array([.25, .33, .5, 1, 2, 20, 25, 50, 100]) # these are the valid gains that Homeira /Lihua uses
+CHECK_RESPONSE_GAINS = np.array([.25, .33, .5, 1, 2, 20, 25, 50, 100, 200]) # these are the valid gains that Homeira /Lihua uses
 def guess_response_gain(resp_vec, stated_rmp, offset_voltage = 0):
     # this function is a bit of logic that tries to guess the gain given an rmp value
     # try to figure out gain on response channel by comparing to RMP
@@ -95,7 +95,7 @@ def get_stim_dict(meta_row, cell_meta_df, stim_name = 'sweepC'):
         stim_vec = abf.sweepC
         stim_gain = get_stim_gain(stim_vec)
         stim_info_dict = get_stim_info(abf, stim_chan, stim_gain = stim_gain)
-    elif np.std(stim_amps) == 0 and recorder_name == 'Lihua' and num_sweeps == 30:
+    elif np.std(stim_amps) == 0 and recorder_name == 'Lihua':
         # logic here is that if abf file meets these criteria, we should replace the stimulus with the one from
         # a specific abf file with available info
         abf_file_name = '14617300.abf'
