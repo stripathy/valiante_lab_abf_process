@@ -21,14 +21,14 @@ from scripts.abf_plotting import plot_ephys_from_abf
 #bessel_filter_khz = sampling_rate / 10000 * 2.5
 bessel_filter_khz = 1
 
-def get_lsa_results(sweep_set, start_time, end_time):
+def get_lsa_results(sweep_set, start_time, end_time, subthresh_min_amp = -500):
     spike_extractor = SpikeFeatureExtractor(start=start_time, end=end_time, filter = bessel_filter_khz)
     spike_train_extractor = SpikeTrainFeatureExtractor(start=start_time, end=end_time, baseline_interval = .05)
 
     # Create the analysis object
     lsa = LongSquareAnalysis(spx=spike_extractor,
                              sptx=spike_train_extractor,
-                             subthresh_min_amp=-400, 
+                             subthresh_min_amp= subthresh_min_amp 
                             )
     lsa_results = lsa.analyze(sweep_set)
     return lsa_results
@@ -43,6 +43,8 @@ def example_sweeps_to_fig(abf_file_name, lsa_results, cell_final_raw_meta_df):
     recorder_name = meta_row['recorder_name'].values[0]
     layer_name = meta_row['layer_name'].values[0]
     cell_type = meta_row['cell_type'].values[0]
+    # if not str(cell_type) and np.isnan(cell_type):
+    #     cell_type = 'Unclassified'
 
     rheo_sweep_index = lsa_results['rheobase_sweep'].name
     #hero_sweep_index = lsa_results['hero_sweep'].name
@@ -53,7 +55,7 @@ def example_sweeps_to_fig(abf_file_name, lsa_results, cell_final_raw_meta_df):
 
     (fig, ax1, ax2) = plot_ephys_from_abf(abf_file_name, cell_final_raw_meta_df, show_sweeps)
     
-    fig_title_string = abf_file_name + ', ' + recorder_name + ', ' + layer_name + ', ' + cell_type
+    fig_title_string = abf_file_name + ', ' + recorder_name + ', ' + layer_name
     fig.suptitle(fig_title_string, fontsize=12)
     fig_file_name = 'figs/' + abf_file_name + 'sweeps.png'
     plt.savefig(fig_file_name, format='png')

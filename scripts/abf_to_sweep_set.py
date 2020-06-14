@@ -25,6 +25,7 @@ def cell_id_to_sweep_set(abf_file_name, meta_info_df):
     stim_abf = pyabf.ABF(stim_file_path) # for some files we're using stim traces from a different file
 
     num_sweeps = int(meta_row['num_sweeps'].values[0])
+
     stim_channel_num = int(meta_row['stim_chan'].values[0])
     response_chan_num = int(meta_row['resp_chan'].values[0])
     stim_gain = meta_row['stim_gain'].values[0]

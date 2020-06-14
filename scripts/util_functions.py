@@ -81,11 +81,16 @@ def get_stim_dict(meta_row, cell_meta_df, stim_name = 'sweepC'):
     # figure out stim channel
     stim_chan = len(abf.channelList)-1 # this seems to be generally true
     abf.setSweep(0, channel=stim_chan)
-    stim_vec = abf.sweepC
+
+    if stim_name == 'sweepY':
+        stim_vec = abf.sweepY
+    else:
+        stim_vec = abf.sweepC
+
     stim_gain = get_stim_gain(stim_vec)
 
     # this infers some basic info about stim amplitudes, durations, etc.
-    stim_info_dict = get_stim_info(abf, stim_chan, stim_gain = stim_gain)
+    stim_info_dict = get_stim_info(abf, stim_chan, stim_gain = stim_gain, stim_name = stim_name)
     stim_amps = stim_info_dict['stim_amp_vec']
     sampling_rate = stim_info_dict['stim_sampling_rate']
     num_sweeps = stim_info_dict['num_sweeps']
